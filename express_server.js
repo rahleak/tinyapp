@@ -43,10 +43,23 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  const tinyURL = generateRandomString(6)
+  console.log(req.body.longURL);  // Log the POST request body to the console
+  res.redirect(301, `/urls/${tinyURL}`);         // Respond with 'Ok' (we will replace this)
+  urlDatabase[tinyURL] = req.body.longURL
+  console.log(urlDatabase)
+  
 });
 
-function generateRandomString() {
+function generateRandomString(length) {
 
+const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    let result = '';
+    const charactersLength = characters.length;
+    for ( let i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+
+    return result;
 }
