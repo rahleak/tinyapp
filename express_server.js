@@ -51,6 +51,11 @@ app.post("/urls", (req, res) => {
   
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = req.body.longURL
+  res.redirect(urlDatabase[req.params.shortURL]);
+});
+
 function generateRandomString(length) {
 
 const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
