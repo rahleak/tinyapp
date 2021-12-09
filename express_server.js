@@ -11,6 +11,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -34,6 +47,7 @@ app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
     username: req.cookies["username"],
+    users: users
   };
   res.render("urls_index", templateVars);
 })
@@ -41,12 +55,18 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     username: req.cookies["username"],
+    users: users
   };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const templateVars = { 
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    username: req.cookies["username"],
+    users: users 
+  };
   res.render("urls_shows", templateVars);
 });
 
@@ -82,6 +102,23 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie('username')
+  res.redirect(301, `/urls`)
+});
+
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"],
+    users: users
+  };
+  res.render("register", templateVars);
+});
+
+app.post("/register", (req, res) => {
+  userID = generateRandomString(6)
+  users[userID] = {id: userID, email: req.body.email, password: req.body.password}
+  res.cookie(`userID`, userID)
+  users[userID]["email"]
+  console.log(userID)
   res.redirect(301, `/urls`)
 });
 
