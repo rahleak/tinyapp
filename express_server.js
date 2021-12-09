@@ -106,20 +106,51 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
+  
+  const userID = req.cookies['userID']
+
   const templateVars = {
     username: req.cookies["username"],
-    users: users
+    user: users[userID]
   };
   res.render("register", templateVars);
 });
 
+app.get('/users.json', (req, res) => { //CHECK YOUR DATABASE
+  res.json(users);
+});
+
 app.post("/register", (req, res) => {
-  userID = generateRandomString(6)
-  users[userID] = {id: userID, email: req.body.email, password: req.body.password}
-  res.cookie(`userID`, userID)
-  users[userID]["email"]
-  console.log(userID)
-  res.redirect(301, `/urls`)
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (req.body.email === "") {
+    res.status(403).send("Email can't be empty!");
+    return;
+  }
+
+  for (let userID in users){
+    const user = users[userID];
+
+    if (user.email === req.body.email) {
+      res.status(403).send('Sorry, that email already exists!');
+      return;
+    }
+
+  }
+
+  userID = generateRandomString(8);
+  newUser = {
+    id: userID, 
+    email: email, 
+    password: password
+  };
+
+  users[userID] = newUser;
+
+  res.cookie('userID', userID)
+  res.redirect('/urls')
+  console.log(users[userID])
 });
 
 function generateRandomString(length) {
