@@ -46,16 +46,16 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"],
-    users: users
+    users: users,
+    email: req.cookies.email
   };
   res.render("urls_index", templateVars);
 })
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    username: req.cookies["username"],
-    users: users
+    users: users,
+    email: req.cookies.email
   };
   res.render("urls_new", templateVars);
 });
@@ -64,7 +64,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { 
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies["username"],
+    email: req.cookies.email,
     users: users 
   };
   res.render("urls_shows", templateVars);
@@ -96,12 +96,46 @@ app.post("/u/:shortURL", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie(`username`, req.body[`username`])
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (password === "") {
+    res.status(403).send("Password can't be empty!")
+  }
+
+  for (let userID in users){
+    const user = users[userID];
+
+    if (user.email === email && user.password === password) {
+      res.cookie('email', email)
+      res.cookie('userID', userID)
+      res.redirect(301, "/urls" )
+    }
+  }
+
+  for (let userID in users){
+    const user = users[userID];
+    if (user.email !== email || user.password !== password){
+      res.status(403).send("Email or password is incorrect!")
+    }
+  }
   res.redirect(301, `/urls`)
 });
 
+app.get("/login", (req, res) => {
+  const templateVars = { 
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    email: req.cookies.email,
+    users: users 
+  };
+
+  res.render("login", templateVars)
+});
+
 app.post("/logout", (req, res) => {
-  res.clearCookie('username')
+  res.clearCookie('email')
+  res.clearCookie('userID')
   res.redirect(301, `/urls`)
 });
 
@@ -110,8 +144,9 @@ app.get("/register", (req, res) => {
   const userID = req.cookies['userID']
 
   const templateVars = {
-    username: req.cookies["username"],
-    user: users[userID]
+    users: users,
+    userID: req.cookies[userID],
+    email: req.cookies.email
   };
   res.render("register", templateVars);
 });
@@ -124,7 +159,7 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  if (req.body.email === "") {
+  if (email === "") {
     res.status(403).send("Email can't be empty!");
     return;
   }
@@ -132,7 +167,7 @@ app.post("/register", (req, res) => {
   for (let userID in users){
     const user = users[userID];
 
-    if (user.email === req.body.email) {
+    if (user.email === email) {
       res.status(403).send('Sorry, that email already exists!');
       return;
     }
@@ -149,6 +184,7 @@ app.post("/register", (req, res) => {
   users[userID] = newUser;
 
   res.cookie('userID', userID)
+  res.cookie('email', email)
   res.redirect('/urls')
   console.log(users[userID])
 });
