@@ -9,18 +9,17 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <%if (users) { %>
-          <a class="nav-item nav-link" style="color:black; position:fixed; right: 100px;;" href="/urls">
-            <%= `Signed in as: ${users[userID]['email']}` %>
+        <a class="nav-item nav-link" style="position:fixed; right: 100px;;" href="/register">Register</a>
+        <%if (email) { %>
+          <a class="nav-item nav-link" href="/urls">
+            <%= `Signed in as: ${email}` %>
           </a>
           <form class="form-inline" action="/logout" method="POST">
             <button style="position:absolute; right: 10px;;" type="submit" class="btn btn-primary">Logout</button>
           </form>
           <% } %>
-            <%if (!users) { %>
-              <form class="form-inline" action="/login" method="POST">
-                <input style="position:absolute; right: 10px;;" class="form-control" type="text" name="username"
-                  placeholder="users">
+            <%if (!email) { %>
+              <form class="form-inline" action="/login" method="GET">
                 <button style="position:absolute; right: 10px;;" type="submit" class="btn btn-primary">Login</button>
               </form>
             <% } %>
