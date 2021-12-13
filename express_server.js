@@ -1,10 +1,11 @@
 const express = require("express");
 const bcrypt = require('bcryptjs');
+const getUserByEmail = require('./helpers')
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
-var cookieSession = require('cookie-session');
+const cookieSession = require('cookie-session');
 
 app.set("view engine", "ejs");
 
@@ -207,38 +208,32 @@ app.post("/login", (req, res) => {
     res.status(403).send("Password can't be empty!")
   }
 
-  for (let userID in users){
-    const user = users[userID];
+  const user = getUserByEmail(email, users);
 
-    hashedPassword = users[userID]['password'];
-
-    if (user['email'] === email && bcrypt.compareSync(password, hashedPassword)) {
-      req.session.userID = userID;
-      res.redirect("/urls" ) //301 WAS HERE
-      return
-    }
+  if (!user || !bcrypt.compareSync(password, user['password'])) {
+    res.status(403).send("Email or password is incorrect!")
+    return
+  }
+  if (user && bcrypt.compareSync(password, user['password'])) {
+    req.session.userID = user['id'];
+    res.redirect("/urls" ) //301 WAS HERE
+    return
   }
 
-  for (let userID in users){
-    const user = users[userID];
-    if (user.email !== email || !bcrypt.compareSync(password, hashedPassword)) {
-      res.status(403).send("Email or password is incorrect!")
-      return
-    }
-  }
-  res.redirect(`/urls`) // 301 WAS HERE
+
+  res.redirect(`/urls`); // 301 WAS HERE
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('email')
+  res.clearCookie('email');
   req.session.userID = null;
-  res.redirect(`/urls`) // 301 WAS HERE
+  res.redirect(`/urls`); // 301 WAS HERE
 });
 
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const hashedPassword = bcrypt.hashSync(password, 10)
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (email === "") {
     res.status(403).send("Email can't be empty!");
@@ -255,8 +250,6 @@ app.post("/register", (req, res) => {
 
   }
 
-//FUNCTIONS THAT HELP
-
   userID = generateRandomString(8);
   newUser = {
     id: userID, 
@@ -267,10 +260,11 @@ app.post("/register", (req, res) => {
   users[userID] = newUser;
 
   req.session.userID = userID;
-  res.redirect('/urls')
-  console.log(users[userID])
+  res.redirect('/urls');
+  console.log(users[userID]);
 });
 
+//FUNCTIONS THAT HELP
 function generateRandomString(length) {
 
 const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
