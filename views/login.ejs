@@ -10,13 +10,13 @@
 </head>
 <body>
   <%- include('partials/_header') %>
-  <%if (email) { %>
+  <%if (user) { %>
     <a class="nav-item nav-link" href="/login">
     </a>
     <form class="form-inline" action="/logout" method="GET">
     </form>
     <% } %>
-      <%if (!email) { %>
+      <%if (!user) { %>
         <form action="/login" method="POST">
           <h2 align="center"  style="margin: 1em;">Log In</h2>
     <div align="center">
