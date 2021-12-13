@@ -43,7 +43,7 @@ const users = {
     email: "user2@example.com", 
     password: "dishwasher-funk"
   }
-}
+};
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -56,22 +56,24 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-app.get("/urls.json", (req, res) => {
+//CHECK YOUR DATABASE
+
+app.get('/users.json', (req, res) => {
   res.json(users);
 });
+
+//GET ROUTES
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.get("/urls", (req, res) => {
-  const userID = req.session.userID
+  const userID = req.session.userID;
   const userURLs = urlsForUser(userID)
   const templateVars = {
     urls: userURLs,
     user: users[userID],
-
-    
   };
 
   console.log(urlDatabase);
@@ -147,6 +149,13 @@ if (users[userID]) {
   res.render("register", templateVars);
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  
+  res.redirect(urlDatabase[req.params.shortURL].longURL);
+});
+
+//POST ROUTES
+
 app.post("/urls", (req, res) => {
   const tinyURL = generateRandomString(6)
   console.log(req.body.longURL);  // Log the POST request body to the console
@@ -156,7 +165,6 @@ app.post("/urls", (req, res) => {
     longURL: req.body.longURL
   }
   console.log(urlDatabase)
-  
 });
 
 app.post("/urls/:shortURL", (req, res)  => {
@@ -167,10 +175,6 @@ urlDatabase[req.params.shortURL] = {
   res.redirect("/urls");
 })
 
-app.get("/u/:shortURL", (req, res) => {
-  
-  res.redirect(urlDatabase[req.params.shortURL].longURL);
-});
 
 app.post("/urls/:shortURL/delete", (req, res) => {
 const userID = req.session.userID
@@ -231,10 +235,6 @@ app.post("/logout", (req, res) => {
   res.redirect(`/urls`) // 301 WAS HERE
 });
 
-app.get('/users.json', (req, res) => { //CHECK YOUR DATABASE
-  res.json(users);
-});
-
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -254,6 +254,8 @@ app.post("/register", (req, res) => {
     }
 
   }
+
+//FUNCTIONS THAT HELP
 
   userID = generateRandomString(8);
   newUser = {
