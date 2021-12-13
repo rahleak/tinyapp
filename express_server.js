@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require("cookie-parser")
@@ -185,6 +186,7 @@ app.post("/u/:shortURL", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  //const hashedPassword = bcrypt.hashSync(password, 10)
 
   if (password === "") {
     res.status(403).send("Password can't be empty!")
@@ -193,17 +195,20 @@ app.post("/login", (req, res) => {
   for (let userID in users){
     const user = users[userID];
 
-    if (user.email === email && user.password === password) {
-      res.cookie('email', email)
+    hashedPassword = users[userID]['password'];
+
+    if (user['email'] === email && bcrypt.compareSync(password, hashedPassword)) {
       res.cookie('userID', userID)
       res.redirect("/urls" ) //301 WAS HERE
+      return
     }
   }
 
   for (let userID in users){
     const user = users[userID];
-    if (user.email !== email || user.password !== password){
+    if (user.email !== email || !bcrypt.compareSync(password, hashedPassword)) {
       res.status(403).send("Email or password is incorrect!")
+      return
     }
   }
   res.redirect(`/urls`) // 301 WAS HERE
@@ -222,6 +227,7 @@ app.get('/users.json', (req, res) => { //CHECK YOUR DATABASE
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10)
 
   if (email === "") {
     res.status(403).send("Email can't be empty!");
@@ -242,13 +248,12 @@ app.post("/register", (req, res) => {
   newUser = {
     id: userID, 
     email: email, 
-    password: password
+    password: hashedPassword
   };
 
   users[userID] = newUser;
 
   res.cookie('userID', userID)
-  res.cookie('email', email)
   res.redirect('/urls')
   console.log(users[userID])
 });
