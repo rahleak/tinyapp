@@ -210,6 +210,7 @@ app.post("/login", (req, res) => {
 
   const user = getUserByEmail(email, users);
 
+  console.log('test', user)
   if (!user || !bcrypt.compareSync(password, user['password'])) {
     res.status(403).send("Email or password is incorrect!")
     return
