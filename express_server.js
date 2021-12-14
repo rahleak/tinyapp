@@ -15,8 +15,9 @@ app.use(cookieSession({
 
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+}));
 
+//OUR DATABASE
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
@@ -85,11 +86,10 @@ app.get("/urls", (req, res) => {
   }
 
   res.render("urls_index", templateVars);
-})
+});
 
 app.get("/urls/new", (req, res) => {
   const userID = req.session.userID
-  
   const templateVars = {
     user: users[userID],
     email: req.cookies.email,
@@ -114,7 +114,7 @@ app.get("/urls/:shortURL", (req, res) => {
   };
 
   if (!users[userID]) {
-    res.redirect('/login')
+    res.redirect('/login');
   }
 
   res.render("urls_shows", templateVars);
@@ -129,13 +129,11 @@ app.get("/login", (req, res) => {
     user: users[userID] 
   };
 
-  res.render("login", templateVars)
+  res.render("login", templateVars);
 });
 
 app.get("/register", (req, res) => {
-  
   const userID = req.session.userID
-
   const templateVars = {
     user: users[userID],
     userID: req.session.userID,
@@ -146,7 +144,6 @@ if (users[userID]) {
   res.redirect('/urls');
   return;
 } 
-
   res.render("register", templateVars);
 });
 
@@ -159,50 +156,49 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const tinyURL = generateRandomString(6)
-  console.log(req.body.longURL);  // Log the POST request body to the console
-  res.redirect(`/urls/${tinyURL}`);         // 301 WAS  HERE! Respond with 'Ok' (we will replace this)
+  console.log(req.body.longURL);
+  res.redirect(`/urls/${tinyURL}`);         
   urlDatabase[tinyURL] = {
     userID: req.session.userID,
     longURL: req.body.longURL
   }
-  console.log(urlDatabase)
+  console.log(urlDatabase);
 });
 
 app.post("/urls/:shortURL", (req, res)  => {
-urlDatabase[req.params.shortURL] = {
-  longURL: req.body.longURL,
-  userID: req.session.userID
-}
+  urlDatabase[req.params.shortURL] = {
+    longURL: req.body.longURL,
+    userID: req.session.userID
+  }
   res.redirect("/urls");
 })
 
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-const userID = req.session.userID
-const userObject = users[userID]
+  const userID = req.session.userID;
+  const userObject = users[userID];
 
   if (!userObject) {
     return res.status(403).send("You need to have an account to perform this action.");
   }
   if (userObject["id"] === userID) {
-    delete urlDatabase[req.params.shortURL]
+    delete urlDatabase[req.params.shortURL];
   } else {
     return res.send("User not authorized to make changes");
   }
   console.log(users[userID])
-  res.redirect("/urls")
-})
+  res.redirect("/urls");
+});
 
 app.post("/u/:shortURL", (req, res) => {
   urlDatabase[req.params['shortURL']] = req.body['longURL']
-  console.log(urlDatabase)
-  res.redirect(`/urls/${req.params['shortURL']}`) //301 was  here
+  console.log(urlDatabase);
+  res.redirect(`/urls/${req.params['shortURL']}`);
 });
 
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  //const hashedPassword = bcrypt.hashSync(password, 10)
 
   if (password === "") {
     res.status(403).send("Password can't be empty!")
@@ -217,18 +213,16 @@ app.post("/login", (req, res) => {
   }
   if (user && bcrypt.compareSync(password, user['password'])) {
     req.session.userID = user['id'];
-    res.redirect("/urls" ) //301 WAS HERE
+    res.redirect("/urls" ) 
     return
   }
-
-
-  res.redirect(`/urls`); // 301 WAS HERE
+  res.redirect(`/urls`); 
 });
 
 app.post("/logout", (req, res) => {
   res.clearCookie('email');
   req.session.userID = null;
-  res.redirect(`/urls`); // 301 WAS HERE
+  res.redirect(`/urls`); 
 });
 
 app.post("/register", (req, res) => {
@@ -248,7 +242,6 @@ app.post("/register", (req, res) => {
       res.status(403).send('Sorry, that email already exists!');
       return;
     }
-
   }
 
   userID = generateRandomString(8);
@@ -269,19 +262,17 @@ app.post("/register", (req, res) => {
 function generateRandomString(length) {
 
 const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-    let result = '';
-    const charactersLength = characters.length;
-    for ( let i = 0; i < length; i++ ) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-
-    return result;
+  let result = '';
+  const charactersLength = characters.length;
+  
+  for ( let i = 0; i < length; i++ ) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
 }
 
 function urlsForUser(userID) {
-
-  let userURLS = {}
+  let userURLS = {};
 
   for  (let url in urlDatabase) {
     if (urlDatabase[url]['userID'] === userID) {
