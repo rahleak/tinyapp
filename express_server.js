@@ -28,10 +28,6 @@ const urlDatabase = {
     longURL: "http://www.google.com",
     userID: "userRandomID"
   },
-  "9pm4rK": {
-    longURL: "http://example.edu",
-    userID: "user2RandomID"
-  }
 };
 
 const users = { 
@@ -80,9 +76,9 @@ app.get("/urls", (req, res) => {
 
   console.log(urlDatabase);
 
+
   if (!users[userID]) {
-    res.redirect('/login');
-    return;
+    return res.status(403).send("<h1>You need to login to perform this action.</h1>");
   }
 
   res.render("urls_index", templateVars);
@@ -114,9 +110,13 @@ app.get("/urls/:shortURL", (req, res) => {
   };
 
   if (!users[userID]) {
-    res.redirect('/login');
+    return res.status(403).send("<h1>You need to have an account to perform this action.</h1>");
   }
 
+  if (userID !== urlDatabase[req.params.shortURL].userID)  {
+    return res.status(403).send("<h1>Only creators can edit!</h1>");
+  }
+  
   res.render("urls_shows", templateVars);
 });
 
@@ -140,12 +140,15 @@ app.get("/register", (req, res) => {
     email: req.cookies.email
   };
 
-if (users[userID]) {
-  res.redirect('/urls');
-  return;
-} 
+  if (users[userID]) {
+    res.redirect('/urls');
+    return;
+  } 
+ 
+  
   res.render("register", templateVars);
 });
+
 
 app.get("/u/:shortURL", (req, res) => {
   
@@ -157,19 +160,30 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   const tinyURL = generateRandomString(6)
   console.log(req.body.longURL);
-  res.redirect(`/urls/${tinyURL}`);         
+  const userID = req.session.userID;         
   urlDatabase[tinyURL] = {
     userID: req.session.userID,
     longURL: req.body.longURL
   }
   console.log(urlDatabase);
+
+  if (!users[userID]) {
+    return res.status(403).send("<h1>You need to have an account to perform this action.</h1>");
+  }
+  //res.redirect(`/urls/${tinyURL}`);
 });
 
 app.post("/urls/:shortURL", (req, res)  => {
+  const userID = req.session.userID;
   urlDatabase[req.params.shortURL] = {
     longURL: req.body.longURL,
     userID: req.session.userID
   }
+  
+  if (!users[userID]) {
+    return res.status(403).send("<h1>You need to have an account to perform this action.</h1>");
+  }
+
   res.redirect("/urls");
 })
 
@@ -179,12 +193,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   const userObject = users[userID];
 
   if (!userObject) {
-    return res.status(403).send("You need to have an account to perform this action.");
+    return res.status(403).send("<h1>You need to have an account to perform this action.</h1>");
   }
   if (userObject["id"] === userID) {
     delete urlDatabase[req.params.shortURL];
   } else {
-    return res.send("User not authorized to make changes");
+    return res.send("<h1>User not authorized to make changes</h1>");
   }
   console.log(users[userID])
   res.redirect("/urls");
@@ -201,14 +215,14 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
 
   if (password === "") {
-    res.status(403).send("Password can't be empty!")
+    res.status(403).send("<h1>Password can't be empty!</h1>")
   }
 
   const user = getUserByEmail(email, users);
 
   console.log('test', user)
   if (!user || !bcrypt.compareSync(password, user['password'])) {
-    res.status(403).send("Email or password is incorrect!")
+    res.status(403).send("<h1>Email or password is incorrect!</h1>")
     return
   }
   if (user && bcrypt.compareSync(password, user['password'])) {
@@ -221,8 +235,8 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie('email');
-  req.session.userID = null;
-  res.redirect(`/urls`); 
+  req.session = null;
+  res.redirect(`/login`); 
 });
 
 app.post("/register", (req, res) => {
@@ -231,7 +245,7 @@ app.post("/register", (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (email === "") {
-    res.status(403).send("Email can't be empty!");
+    res.status(403).send("<h1>Email can't be empty!</h1>");
     return;
   }
 
@@ -239,7 +253,7 @@ app.post("/register", (req, res) => {
     const user = users[userID];
 
     if (user.email === email) {
-      res.status(403).send('Sorry, that email already exists!');
+      res.status(403).send('<h1>Sorry, that email already exists!</h1>');
       return;
     }
   }
@@ -274,7 +288,7 @@ const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678
 function urlsForUser(userID) {
   let userURLS = {};
 
-  for  (let url in urlDatabase) {
+  for (let url in urlDatabase) {
     if (urlDatabase[url]['userID'] === userID) {
       userURLS[url] = urlDatabase[url]
     }
