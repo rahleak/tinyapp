@@ -170,7 +170,7 @@ app.post("/urls", (req, res) => {
   if (!users[userID]) {
     return res.status(403).send("<h1>You need to have an account to perform this action.</h1>");
   }
-  //res.redirect(`/urls/${tinyURL}`);
+  res.redirect(`/urls/${tinyURL}`);
 });
 
 app.post("/urls/:shortURL", (req, res)  => {
@@ -246,6 +246,11 @@ app.post("/register", (req, res) => {
 
   if (email === "") {
     res.status(403).send("<h1>Email can't be empty!</h1>");
+    return;
+  }
+
+  if (password === "") {
+    res.status(403).send("<h1>Password can't be empty!</h1>");
     return;
   }
 
